@@ -1,0 +1,6 @@
+{
+  "name": "npm test runs tests",
+  "steps": [
+    { "use": "node.testScriptIsReal", "with": { "script": "test", "run": true, "minTests": 1 } }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "row": { "repo": { "baseBranch": "main" } },
+  "settings": { "testsMode": "any" }
+}

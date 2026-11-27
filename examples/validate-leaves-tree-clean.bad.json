@@ -1,0 +1,6 @@
+{
+  "_about": "Run in a repo whose npm run ci runs a formatter that rewrites a tracked file.",
+  "workspace": {
+    "dir": "."
+  }
+}

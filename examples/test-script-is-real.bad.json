@@ -1,0 +1,6 @@
+{
+  "_about": "Run in a repo whose test script is \"exit 0\".",
+  "workspace": {
+    "dir": "."
+  }
+}

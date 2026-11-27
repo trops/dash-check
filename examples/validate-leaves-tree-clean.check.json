@@ -1,0 +1,7 @@
+{
+  "name": "Validate doesn't rewrite files",
+  "steps": [
+    { "use": "git.validateLeavesTreeClean", "with": { "command": "npm run ci", "timeoutSec": 1800 },
+      "message": "Validation rewrote tracked files (a formatter's --write, or npm install --save): fix the script, and don't commit them" }
+  ]
+}

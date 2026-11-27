@@ -1,0 +1,14 @@
+{
+  "name": "No new TODO, console.log or disables",
+  "steps": [
+    { "use": "git.noNewMatches",
+      "with": { "glob": "src/**/*.js, !**/*.test.js", "pattern": "console\\.log\\(", "base": "{repo.baseBranch}" },
+      "message": "Remove the console.log you added" },
+    { "use": "git.noNewMatches",
+      "with": { "glob": "**/*.{js,jsx,ts,tsx}", "pattern": "\\b(TODO|FIXME|HACK|XXX)\\b", "base": "{repo.baseBranch}" },
+      "message": "Do the TODO or file a ticket; don't commit it" },
+    { "use": "git.noNewMatches",
+      "with": { "glob": "**/*.{js,jsx,ts,tsx}", "pattern": "eslint-disable|@ts-ignore|\\.only\\(|debugger;", "base": "{repo.baseBranch}" },
+      "message": "Fix the code instead of turning the check off" }
+  ]
+}

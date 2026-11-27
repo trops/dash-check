@@ -136,6 +136,40 @@ test("ctx.git reads the repo", async () => {
   await assert.rejects(() => notRepo.branch(), /isn't a git repo/);
 });
 
+test("ctx.git.addedLines: committed, uncommitted and untracked lines, numbered as the file is now", async () => {
+  const repo = makeRepo({ "src/a.js": "one\ntwo\nthree\n", "img.bin": "\0\x01" });
+  repo.git("checkout", "-q", "-b", "feat/DASH-2");
+  repo.commit({ "src/a.js": "one\nTODO two\nthree\n++ looks like a header\n" }, "DASH-2: a");
+  repo.write({ "src/a.js": "zero\none\nTODO two\nthree\n++ looks like a header\n", "new dir/b.js": "b1\nb2", "bin.dat": "\0x" });
+  repo.git("rm", "-q", "img.bin");
+  const { git } = createContext({}, { cwd: repo.dir });
+  assert.deepEqual(await git.addedLines("origin/main"), [
+    { file: "src/a.js", line: 1, text: "zero" },
+    { file: "src/a.js", line: 3, text: "TODO two" },
+    { file: "src/a.js", line: 5, text: "++ looks like a header" },
+    { file: "new dir/b.js", line: 1, text: "b1" },
+    { file: "new dir/b.js", line: 2, text: "b2" },
+  ]);
+  await assert.rejects(() => git.addedLines("origin/nope"), /origin\/nope isn't there/);
+  assert.deepEqual(await createContext({}, { cwd: makeRepo().dir }).git.addedLines("origin/main"), []);
+});
+
+test("ctx.git.commits: each commit past a ref, oldest first, with its files", async () => {
+  const repo = makeRepo({ "README.md": "x\n" });
+  repo.git("checkout", "-q", "-b", "feat/DASH-3");
+  repo.commit({ "src/a.js": "a\n" }, "DASH-3: add a\n\nWith a body.");
+  repo.commit({ "src/b.js": "b\n", "README.md": "y\n" }, "fix lint");
+  const { git } = createContext({}, { cwd: repo.dir });
+  const list = await git.commits("origin/main");
+  assert.deepEqual(list.map((c) => [c.subject, c.message, c.files, c.parents.length]), [
+    ["DASH-3: add a", "DASH-3: add a\n\nWith a body.", ["src/a.js"], 1],
+    ["fix lint", "fix lint", ["README.md", "src/b.js"], 1],
+  ]);
+  assert.match(list[0].sha, /^[0-9a-f]{40}$/);
+  assert.deepEqual(await git.commits("HEAD"), []);
+  await assert.rejects(() => git.commits("origin/nope"), /origin\/nope isn't there/);
+});
+
 test("ctx.github uses GH_TOKEN and says the HTTP code on failure", async () => {
   const f = fakeFetch({
     "repos/o/r/pulls/12": { number: 12, state: "open", merged: false, head: { sha: "abc" } },

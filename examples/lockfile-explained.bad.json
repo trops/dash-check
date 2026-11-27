@@ -1,0 +1,11 @@
+{
+  "_about": "Run on a branch whose package-lock.json changed (node_modules/foo) while package.json's dependencies didn't.",
+  "row": {
+    "repo": {
+      "baseBranch": "main"
+    }
+  },
+  "workspace": {
+    "dir": "."
+  }
+}
