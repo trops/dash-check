@@ -1,0 +1,11 @@
+{
+  "_about": "Run on a branch whose package-lock.json changed along with a dependency in package.json (or only in its version).",
+  "row": {
+    "repo": {
+      "baseBranch": "main"
+    }
+  },
+  "workspace": {
+    "dir": "."
+  }
+}

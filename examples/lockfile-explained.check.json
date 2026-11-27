@@ -1,0 +1,6 @@
+{
+  "name": "The lockfile changed only with a dependency",
+  "steps": [
+    { "use": "node.lockfileExplained", "with": { "base": "{repo.baseBranch}" } }
+  ]
+}

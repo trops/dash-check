@@ -1,0 +1,6 @@
+{
+  "name": "No file grows too big",
+  "steps": [
+    { "use": "files.maxGrowth", "with": { "base": "{repo.baseBranch}", "maxLines": 800, "maxAdded": 50 } }
+  ]
+}

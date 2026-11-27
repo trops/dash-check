@@ -1,0 +1,5 @@
+{
+  "input": { "answer": "```json\n{ \"files\": [\"src/a.js\", \"src/a.test.js\"] }\n```" },
+  "item": { "id": "DASH-98" },
+  "row": { "repo": { "baseBranch": "main" } }
+}

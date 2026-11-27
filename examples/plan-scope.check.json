@@ -1,0 +1,6 @@
+{
+  "name": "Only the planned files changed",
+  "steps": [
+    { "use": "git.changesMatchPlan", "with": { "base": "{repo.baseBranch}", "alsoAllow": "CHANGELOG.md" } }
+  ]
+}

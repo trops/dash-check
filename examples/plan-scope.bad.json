@@ -1,0 +1,4 @@
+{
+  "input": { "answer": "```json\n{ \"files\": [\"src/a.js\"] }\n```" },
+  "row": { "repo": { "baseBranch": "main" } }
+}

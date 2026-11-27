@@ -49,12 +49,34 @@ export interface Fs {
   list(globs: string | string[]): Promise<string[]>;
 }
 
+/** A line added since a ref (ctx.git.addedLines). */
+export interface AddedLine {
+  file: string;
+  /** Its line number in the file as it is now (1-based). */
+  line: number;
+  text: string;
+}
+
+/** A commit past a ref (ctx.git.commits). */
+export interface Commit {
+  sha: string;
+  subject: string;
+  message: string;
+  parents: string[];
+  /** The files it changed; empty for a merge commit. */
+  files: string[];
+}
+
 export interface Git {
   branch(): Promise<string>;
   uncommitted(): Promise<string[]>;
   isClean(): Promise<boolean>;
   commitsSince(ref: string): Promise<number>;
   changedFiles(ref: string): Promise<string[]>;
+  /** Lines added since where HEAD left ref: committed, uncommitted, and untracked files whole. Binary files left out. */
+  addedLines(ref: string): Promise<AddedLine[]>;
+  /** The commits in ref..HEAD, oldest first. */
+  commits(ref: string): Promise<Commit[]>;
   lastCommitMessage(): Promise<string>;
   remoteHas(branch: string, remote?: string): Promise<boolean>;
   defaultBranch(): Promise<string | null>;

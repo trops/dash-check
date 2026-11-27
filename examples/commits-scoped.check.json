@@ -1,0 +1,6 @@
+{
+  "name": "Each commit is scoped",
+  "steps": [
+    { "use": "git.commitsScoped", "with": { "base": "{repo.baseBranch}", "mentions": "{item.id}" } }
+  ]
+}

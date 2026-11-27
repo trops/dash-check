@@ -1,0 +1,7 @@
+{
+  "name": "New tests are run",
+  "steps": [
+    { "use": "node.newTestsAreRun",
+      "with": { "base": "{repo.baseBranch}", "runnerFiles": "package.json, scripts/ci.sh", "autoGlobs": "{autoGlobs}" } }
+  ]
+}

@@ -121,10 +121,12 @@ You can also call `fail(message, { at })` to fail with a message and a location,
 | `ctx.env` | The environment, `DASH_*` included |
 | `ctx.fs` | `exists(p)`, `read(p)`, `readJson(p)`, `list(glob)`, `dirExists(p)`, relative to the workspace |
 | `ctx.run(cmd, { timeoutSec })` | Runs a command in the workspace: `{ code, stdout, stderr, timedOut }` |
-| `ctx.git` | `branch()`, `isClean()`, `uncommitted()`, `commitsSince(ref)`, `changedFiles(ref)`, `lastCommitMessage()`, `remoteHas(branch)`, `defaultBranch()`, `fileAt(ref, path)` |
+| `ctx.git` | `branch()`, `isClean()`, `uncommitted()`, `commitsSince(ref)`, `changedFiles(ref)`, `addedLines(ref)`, `commits(ref)`, `lastCommitMessage()`, `remoteHas(branch)`, `defaultBranch()`, `fileAt(ref, path)` |
 | `ctx.github` | `pr(urlOrNumber)`, `checksFor(sha)`, `waitForChecks(sha, { timeoutSec, noChecksAfterSec })`, using `GH_TOKEN`. A failure says the HTTP code and what to do |
 | `ctx.tool(provider, name, args)` | A read-only call to one of the bot's providers (Jira, …). Only Dash can answer it, so outside Dash it fails and says so |
 | `ctx.get(path)`, `ctx.fill(text)`, `ctx.when(expr)` | Read a value by path (`"handoff.files"`), fill `"{placeholders}"`, test a `when` |
+
+`changedFiles(ref)` and `addedLines(ref)` see the same work: what's committed since where the branch left `ref`, plus uncommitted and untracked files. `addedLines` gives `[{ file, line, text }]`, numbered as the file is now (an untracked file counts whole; binary files are left out), so a check can judge only what the work added. `commits(ref)` gives `[{ sha, subject, message, parents, files }]` for `ref..HEAD`, oldest first.
 
 In a test, give the context what it can't have outside Dash:
 
@@ -152,10 +154,10 @@ check("the work is ready for review", async (ctx) => {
 |---|---|
 | handoff | `has({ keys })`, `status({ is })`, `eachHas({ list, keys })` |
 | plan | `hasSections({ key, sections })`, `acceptanceEachHasTest({ acceptance, tests })` |
-| git | `onBranch({ branch })`, `committedSince({ base, min })`, `clean()`, `changedOnly({ globs, base })`, `noChangesTo({ globs, base })` |
-| files | `exist({ paths })`, `contain({ path, text })`, `noneMatch({ glob, pattern })` |
+| git | `onBranch({ branch })`, `committedSince({ base, min })`, `clean()`, `changedOnly({ globs, base })`, `noChangesTo({ globs, base })`, and the factory checks below |
+| files | `exist({ paths })`, `contain({ path, text })`, `noneMatch({ glob, pattern })`, `maxGrowth(…)` |
 | commands | `passes({ command, timeoutSec })`, `outputMatches({ command, pattern })` |
-| node | `testsPass({ command })`, `lintPasses({ command })`, `noNewDependencies({ base, allow })` |
+| node | `testsPass({ command })`, `lintPasses({ command })`, `noNewDependencies({ base, allow })`, `lockfileExplained(…)`, `testScriptIsReal(…)`, `newTestsAreRun(…)` |
 | github | `prOpen({ prKey })`, `ciPassed({ prKey, timeoutSec, noChecksAfterSec, ifNoChecks })` |
 | tracker | `ticketExists({ provider, tool, idArg, id })`, `ticketHasLabel({ label, … })` (these need Dash's `ctx.tool`) |
 
@@ -166,6 +168,41 @@ A few things every helper does for you:
 - **Placeholders.** A param can hold `{placeholders}`: `{repo.baseBranch}` is the picked row's `baseBranch`, `{workRoot}` is a team setting, and `{item.id}` is the work item's id. A default whose placeholder has no value counts as empty: with no `repo` row, `git.committedSince` uses the repo's default branch.
 - **`message`.** Every helper takes `message`, which replaces its failure text. Where the failure was (`src/index.js:12`) is kept.
 - **Errors become failures.** If a helper throws (the folder isn't a git repo, GitHub says 404), the failure says why, and the check goes on to the next step.
+
+### Factory checks: did the bot do only what it planned?
+
+Checks for a code factory, where a planning bot names the files and a coding bot changes them. Each works on any repo: all it needs is git and, for the plan checks, a handoff that lists files. Every one compares with `base` (default `{repo.baseBranch}`; empty means the repo's default branch, through `origin/` when the remote has it), and every one judges only **what the work changed**, so existing debt in the repo doesn't fail it.
+
+| Helper | Fails when | Params (defaults) |
+|---|---|---|
+| `git.changesMatchPlan` | A changed file isn't in the plan. A lockfile outside the plan passes only when `node.lockfileExplained` would | `planKeys` (`files, newFiles, tests`), `alsoAllow`, `lockfiles` (`package-lock.json, npm-shrinkwrap.json, yarn.lock, pnpm-lock.yaml`), `base` |
+| `git.commitsScoped` | A commit (not just the total diff) touches files outside the plan, or its message doesn't mention the item. Merge commits are skipped | the same, plus `mentions` (`{item.id}`). `planKeys: ""` or `mentions: ""` turns that half off |
+| `node.lockfileExplained` | The lockfile changed, but no dependency section (`dependencies`, `devDependencies`, `optionalDependencies`, `peerDependencies`) of `package.json` did. Changing only the root `version` fields (a release) is fine. `yarn.lock` and `pnpm-lock.yaml` need a dependency change for any change | `lockfile` (`package-lock.json`), `manifest` (the `package.json` next to it, plus any changed `package.json` below it, for workspaces), `base` |
+| `git.sourceHasTests` | A changed source file has no changed test: its own (`paired`), or any (`any`) | `sources` (`src/**` and `lib/**` JS/TS, not tests, stories or `.d.ts`), `tests`, `testPattern` (`<dir>/<name>.{test,spec}.*`, `<dir>/__tests__/<name>.*`, `{test,tests}/**/<name>.{test,spec}.*`, `{test,tests}/**/<name>.*`), `mode` (`paired`), `exempt` |
+| `git.noNewMatches` | An **added** line matches a pattern. The diff-aware `files.noneMatch`: the 600 `console.log`s already there don't count, a new one does | `glob` (a list; `!glob` leaves out), `pattern`, `base` |
+| `files.maxGrowth` | A changed file is new and over `maxLines`, crosses `maxLines`, or was already over it and grew by more than `maxAdded` | `glob` (JS/TS), `maxLines` (800), `maxAdded` (50), `exempt`, `base` |
+| `git.validateLeavesTreeClean` | The tree isn't clean before validating, the command fails, or it leaves files changed (a formatter's `--write`, `npm install --save`) | `command` (`npm test`), `timeoutSec` (1800), `allowDirtyBefore` (false) |
+| `node.testScriptIsReal` | The `test` script is missing, empty, a no-op (`exit 0`, `true`, `echo …`, npm's placeholder) or hides its failures (`… \|\| true`). With `run`, also when it reports fewer than `minTests` tests | `script` (`test`), `run` (false), `minTests` (1), `timeoutSec` (900) |
+| `node.newTestsAreRun` | A **new** test file isn't named in a runner file, isn't matched by a glob written in one (`node --test 'test/*.test.js'`), and isn't in `autoGlobs` | `tests` (`**/*.{test,spec}.{js,cjs,mjs,jsx,ts,tsx}`), `runnerFiles` (`package.json`), `autoGlobs` (what the runner finds by itself, e.g. `src/**/*.test.js` for jest), `base` |
+
+A coding bot's step might run them in this order:
+
+```json
+{
+  "name": "The Coder did only what it planned",
+  "steps": [
+    { "use": "git.validateLeavesTreeClean", "with": { "command": "npm run ci" } },
+    { "use": "git.changesMatchPlan", "with": { "alsoAllow": "CHANGELOG.md" } },
+    { "use": "git.commitsScoped" },
+    { "use": "git.noChangesTo", "with": { "globs": ".github/workflows/**, .dash/checks/**" }, "label": "Gates unchanged" },
+    { "use": "git.sourceHasTests", "with": { "exempt": "**/index.js" } },
+    { "use": "node.newTestsAreRun", "with": { "runnerFiles": "package.json, scripts/ci.sh" } },
+    { "use": "git.noNewMatches", "with": { "glob": "src/**, !**/*.test.*", "pattern": "console\\.log\\(|\\b(TODO|FIXME)\\b" },
+      "message": "Remove the console.log or TODO you added" },
+    { "use": "files.maxGrowth" }
+  ]
+}
+```
 
 ### Writing your own helper
 
@@ -195,7 +232,7 @@ module.exports = defineHelper({
 });
 ```
 
-Param types are `text`, `number`, `boolean`, `select` (with `options`), `path`, `glob`, `regex` and `list`. Values are converted to the type before `run` gets them: a `list` given as `"a, b"` arrives as `["a", "b"]`, and a `regex` arrives as a `RegExp`.
+Param types are `text`, `number`, `boolean`, `select` (with `options`), `path`, `glob`, `regex` and `list`. Values are converted to the type before `run` gets them: a `list` given as `"a, b"` arrives as `["a", "b"]` (a glob's `{a,b}` stays whole: `"**/*.{js,ts}, !dist/**"` is two globs), and a `regex` arrives as a `RegExp`.
 
 Then use it from code with `helper("team.changelogUpdated")(ctx, { … })`, or from a recipe with `{ "use": "team.changelogUpdated" }`. It also shows in `dash-check --list-helpers`, and so in Dash's check composer.
 
@@ -286,7 +323,7 @@ A `.check.js` file also runs by itself, `node .dash/checks/validate.check.js`, t
 
 ## Examples
 
-[`examples/`](examples) holds the Code Factory's checks, written with dash-check. Each has a `.sample.json` that passes and a `.bad.json` that fails:
+[`examples/`](examples) holds the Code Factory's checks, written with dash-check. Each has a `.sample.json` that passes and a `.bad.json` that fails. The ones that look at a repo say in `_about` what the repo looks like (the tests build it):
 
 | Example | Proves | Reads |
 |---|---|---|
@@ -297,12 +334,21 @@ A `.check.js` file also runs by itself, `node .dash/checks/validate.check.js`, t
 | `every-acceptance-has-a-test` | Every acceptance item has a test; the plan names real files | handoff, workspace |
 | `validate` | Lint and tests pass, reported apart | run |
 | `work-committed` | The work is committed, and the commit names the item | git, item |
-| `changes-match-plan` | Only the planned files changed | git, handoff, row |
+| `changes-match-plan` | Only the planned files changed; a lockfile only with `node.lockfileExplained` | git, fs, handoff, row |
 | `pr-ci` | The PR's CI passed (no CI is a failure) | github |
 | `merge-outcome` | The PR was merged only when allowed | github, settings |
 | `workspace-cleaned` | The job's folder is gone | workspace |
 | `jira-comment-from-job` | The ticket got this job's comment | tool, job |
 | `ready-for-review.check.json` | The composer mockup's recipe | git, run, fs, handoff |
+| `plan-scope.check.json` | `git.changesMatchPlan` | git, fs, handoff |
+| `commits-scoped.check.json` | `git.commitsScoped` | git, handoff, item |
+| `lockfile-explained.check.json` | `node.lockfileExplained` | git, fs |
+| `source-has-tests.check.json` | `git.sourceHasTests`, its mode a team setting | git, fs, settings |
+| `no-new-debt.check.json` | `git.noNewMatches`: no new console.log, TODO or eslint-disable | git |
+| `max-growth.check.json` | `files.maxGrowth` | git, fs |
+| `validate-leaves-tree-clean.check.json` | `git.validateLeavesTreeClean` | git, run |
+| `test-script-is-real.check.json` | `node.testScriptIsReal` | fs, run |
+| `new-tests-are-run.check.json` | `node.newTestsAreRun` | git, fs, settings |
 | `helpers/changelog.js` | A team's own helper | git |
 
 ## License

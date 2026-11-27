@@ -1,0 +1,6 @@
+{
+  "name": "Changed source has tests",
+  "steps": [
+    { "use": "git.sourceHasTests", "with": { "base": "{repo.baseBranch}", "mode": "{testsMode}", "exempt": "**/index.js" } }
+  ]
+}
