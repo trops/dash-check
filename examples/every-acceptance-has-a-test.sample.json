@@ -1,0 +1,3 @@
+{
+  "input": { "answer": "```json\n{ \"acceptance\": [\"Names are title case\", \"Dashes are kept\"], \"tests\": [{ \"acceptance\": \"Names are title case\", \"test\": \"titleCase('a b') is 'A B'\", \"file\": \"test/title.test.js\" }, { \"acceptance\": \"Dashes are kept\", \"test\": \"titleCase('a-b') is 'A-B'\", \"file\": \"test/title.test.js\" }], \"files\": [\"package.json\"], \"newFiles\": [\"src/title.js\"] }\n```" }
+}

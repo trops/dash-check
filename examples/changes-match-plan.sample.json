@@ -1,0 +1,4 @@
+{
+  "input": { "answer": "```json\n{ \"files\": [\"src/index.js\"], \"newFiles\": [\"src/title.js\"], \"tests\": [{ \"acceptance\": \"Names are title case\", \"test\": \"…\", \"file\": \"test/title.test.js\" }] }\n```" },
+  "row": { "repo": { "baseBranch": "main" } }
+}

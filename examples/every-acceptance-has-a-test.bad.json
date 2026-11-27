@@ -1,0 +1,3 @@
+{
+  "input": { "answer": "```json\n{ \"acceptance\": [\"Names are title case\", \"Dashes are kept\", \"Empty names stay empty\"], \"tests\": [{ \"acceptance\": \"Names are title case\", \"test\": \"titleCase('a b') is 'A B'\" }], \"files\": [\"src/invented.js\"] }\n```" }
+}

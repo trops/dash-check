@@ -1,0 +1,4 @@
+{
+  "input": { "answer": "```json\n{ \"prUrl\": \"https://github.com/trops/code-factory-sandbox/pull/12\", \"merged\": true }\n```" },
+  "settings": { "mergeWhenGreen": true }
+}

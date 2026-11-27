@@ -1,0 +1,6 @@
+{
+  "input": { "answer": "Done.\n\n```json\n{ \"status\": \"ok\", \"files\": [\"src/index.js\", \"test/index.test.js\"] }\n```" },
+  "item": { "id": "DASH-97" },
+  "workspace": { "dir": ".", "branch": "feat/DASH-97-titlecase" },
+  "row": { "repo": { "baseBranch": "main" } }
+}

@@ -1,0 +1,6 @@
+{
+  "input": { "answer": "```json\n{ \"summary\": \"Workspace ready\" }\n```" },
+  "item": { "id": "DASH-97" },
+  "workspace": { "dir": ".", "branch": "feat/DASH-97-somewhere-else" },
+  "row": { "repo": { "baseBranch": "main" } }
+}

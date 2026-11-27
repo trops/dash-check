@@ -1,0 +1,4 @@
+{
+  "input": { "answer": "Opened the PR.\n\n```json\n{ \"prUrl\": \"https://github.com/trops/code-factory-sandbox/pull/12\" }\n```" },
+  "item": { "id": "DASH-97" }
+}

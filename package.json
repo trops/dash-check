@@ -1,0 +1,61 @@
+{
+  "name": "@trops/dash-check",
+  "version": "0.1.0",
+  "description": "Compose deterministic checks from small, described building blocks: Jest-style files, JSON recipes and helpers. Runs in Dash, in CI and on a laptop.",
+  "license": "MIT",
+  "author": "trops",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trops/dash-check.git"
+  },
+  "homepage": "https://github.com/trops/dash-check#readme",
+  "bugs": "https://github.com/trops/dash-check/issues",
+  "keywords": ["dash", "checks", "ci", "testing", "bots", "deterministic"],
+  "engines": {
+    "node": ">=18"
+  },
+  "type": "commonjs",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "bin": {
+    "dash-check": "cli/bin.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./helpers": {
+      "types": "./helpers/index.d.ts",
+      "default": "./helpers/index.js"
+    },
+    "./recipe": {
+      "types": "./recipe/index.d.ts",
+      "default": "./recipe/index.js"
+    },
+    "./recipe/schema.json": "./recipe/schema.json",
+    "./cli": {
+      "types": "./cli/index.d.ts",
+      "default": "./cli/index.js"
+    },
+    "./lib/register.js": "./lib/register.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "lib/",
+    "helpers/",
+    "recipe/",
+    "cli/",
+    "examples/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

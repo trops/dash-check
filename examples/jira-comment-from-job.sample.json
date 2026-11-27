@@ -1,0 +1,5 @@
+{
+  "input": { "answer": "```json\n{ \"summary\": \"Commented on DASH-97\" }\n```" },
+  "item": { "id": "DASH-97" },
+  "job": { "id": "job-1", "startedAt": "2026-11-26T07:50:00Z" }
+}

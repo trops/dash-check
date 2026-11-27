@@ -1,0 +1,5 @@
+{
+  "input": { "answer": "```json\n{ \"plan\": { \"cause\": \"The slug drops dashes\", \"fix\": \"\" } }\n```" },
+  "picks": { "repo": "some-other-repo" },
+  "settings": { "repo": [{ "key": "code-factory-sandbox", "baseBranch": "main" }] }
+}

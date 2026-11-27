@@ -1,0 +1,12 @@
+{
+  "name": "The work is ready for review",
+  "steps": [
+    { "use": "git.committedSince", "with": { "base": "{repo.baseBranch}", "min": 1 } },
+    { "use": "node.testsPass", "with": { "command": "npm test" } },
+    { "use": "files.noneMatch",
+      "with": { "glob": "src/**/*.js", "pattern": "console\\.log" },
+      "message": "Remove console.log from src" },
+    { "expect": "handoff.files", "matcher": "toHaveLengthAtLeast", "args": [1],
+      "message": "The handoff lists no changed files" }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "input": { "answer": "```json\n{ \"plan\": { \"cause\": \"The slug drops dashes\", \"fix\": \"Keep dashes in slugify()\", \"test\": \"slugify('a-b') is 'a-b'\" } }\n```" },
+  "picks": { "repo": "code-factory-sandbox" },
+  "settings": { "repo": [{ "key": "code-factory-sandbox", "baseBranch": "main" }, { "key": "dash-core", "baseBranch": "master" }] }
+}

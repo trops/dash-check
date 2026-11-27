@@ -1,0 +1,4 @@
+{
+  "input": { "answer": "```json\n{ \"summary\": \"Reported and cleaned up\" }\n```" },
+  "workspace": { "dir": "." }
+}

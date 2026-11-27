@@ -1,0 +1,13 @@
+{
+  "input": {
+    "answer": "```json\n{ \"summary\": \"Committed the fix\" }\n```"
+  },
+  "item": {
+    "id": "DASH-98"
+  },
+  "row": {
+    "repo": {
+      "baseBranch": "main"
+    }
+  }
+}
