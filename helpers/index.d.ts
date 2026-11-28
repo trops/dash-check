@@ -73,8 +73,30 @@ export interface NewTestsAreRunParams extends Base {
   autoGlobs?: List;
 }
 
+export interface EvidenceForAcceptanceParams {
+  /** The evidence: { searchedDone, missing: [{ acceptance, read, why }] }. Default "notYetDone". */
+  key?: string;
+  /** Default "acceptance". */
+  acceptanceKey?: string;
+  /** Needs searchedDone. Default true. */
+  requireSearch?: boolean;
+  /** Judge only when the handoff's status is one of these; others pass. Default ["ok"]; empty judges every handoff. */
+  when?: List;
+}
+export interface NoOpenDecisionsParams {
+  /** Default "openDecisions". */
+  key?: string;
+  /** Judge only when the handoff's status is one of these; others pass. Default ["ok"]; empty judges every handoff. */
+  when?: List;
+}
+
 export const handoff: { has: H; status: H; eachHas: H };
-export const plan: { hasSections: H; acceptanceEachHasTest: H };
+export const plan: {
+  hasSections: H;
+  acceptanceEachHasTest: H;
+  evidenceForAcceptance: Helper<EvidenceForAcceptanceParams>;
+  noOpenDecisions: Helper<NoOpenDecisionsParams>;
+};
 export const git: {
   onBranch: H;
   committedSince: H;

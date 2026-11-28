@@ -153,7 +153,7 @@ check("the work is ready for review", async (ctx) => {
 | Group | Helpers |
 |---|---|
 | handoff | `has({ keys })`, `status({ is })`, `eachHas({ list, keys })` |
-| plan | `hasSections({ key, sections })`, `acceptanceEachHasTest({ acceptance, tests })` |
+| plan | `hasSections({ key, sections })`, `acceptanceEachHasTest({ acceptance, tests })`, `evidenceForAcceptance({ key, acceptanceKey, requireSearch, when })`, `noOpenDecisions({ key, when })` (see below) |
 | git | `onBranch({ branch })`, `committedSince({ base, min })`, `clean()`, `changedOnly({ globs, base })`, `noChangesTo({ globs, base })`, and the factory checks below |
 | files | `exist({ paths })`, `contain({ path, text })`, `noneMatch({ glob, pattern })`, `maxGrowth(…)` |
 | commands | `passes({ command, timeoutSec })`, `outputMatches({ command, pattern })` |
@@ -168,6 +168,20 @@ A few things every helper does for you:
 - **Placeholders.** A param can hold `{placeholders}`: `{repo.baseBranch}` is the picked row's `baseBranch`, `{workRoot}` is a team setting, and `{item.id}` is the work item's id. A default whose placeholder has no value counts as empty: with no `repo` row, `git.committedSince` uses the repo's default branch.
 - **`message`.** Every helper takes `message`, which replaces its failure text. Where the failure was (`src/index.js:12`) is kept.
 - **Errors become failures.** If a helper throws (the folder isn't a git repo, GitHub says 404), the failure says why, and the check goes on to the next step.
+
+### Plan checks: is the plan ready to code?
+
+Checks on a planning bot's handoff, before anyone writes code. They read only the handoff (no folder, no git), and judge it only when its `status` is one of `when` (default `ok`); any other status passes with "No plan (<status>)", so a bot that answers `none` or `ask` isn't failed for having no plan.
+
+| Helper | Fails when | Params (defaults) |
+|---|---|---|
+| `plan.evidenceForAcceptance` | The plan has no `notYetDone`; its `searchedDone` (what it searched for done work, and found) is empty; an acceptance item has no `missing` entry `{ acceptance, read, why }` with the same text and a non-empty `read` and `why`; or it says some code was "not read" | `key` (`notYetDone`), `acceptanceKey` (`acceptance`), `requireSearch` (true), `when` (`ok`; empty judges every handoff) |
+| `plan.noOpenDecisions` | The plan has no `openDecisions` list, or the list isn't empty (then the bot should ask, not plan) | `key` (`openDecisions`), `when` (`ok`) |
+
+```json
+{ "use": "plan.evidenceForAcceptance" }
+{ "use": "plan.noOpenDecisions", "with": { "when": "ok, split" } }
+```
 
 ### Factory checks: did the bot do only what it planned?
 
