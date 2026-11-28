@@ -37,7 +37,7 @@ test("the starter helpers are all there, described, and only use Layer 0", () =>
     "github.ciPassed", "github.prOpen",
     "handoff.eachHas", "handoff.has", "handoff.status",
     "node.lintPasses", "node.lockfileExplained", "node.newTestsAreRun", "node.noNewDependencies", "node.testScriptIsReal", "node.testsPass",
-    "plan.acceptanceEachHasTest", "plan.hasSections",
+    "plan.acceptanceEachHasTest", "plan.evidenceForAcceptance", "plan.hasSections", "plan.noOpenDecisions",
     "tracker.ticketExists", "tracker.ticketHasLabel",
   ]);
   for (const h of helpers.all) {
@@ -137,6 +137,49 @@ test("plan.hasSections and plan.acceptanceEachHasTest", async () => {
   const g = await bad(acceptanceEachHasTest, createContext(gaps), {}, /^No test for: B$/, /^No test for: C$/);
   assert.equal(g.failures.length, 2, "every gap is listed");
   await bad(acceptanceEachHasTest, createContext(answer({ acceptance: [] })), {}, /acceptance is empty/);
+});
+
+test("plan.evidenceForAcceptance: a search, and what was read and why for every acceptance item", async () => {
+  const { evidenceForAcceptance: ev } = helpers.plan;
+  const m = (acceptance, read = "src/a.js: run", why = "it only logs") => ({ acceptance, read, why });
+  const plan = (notYetDone, extra = {}) => answer({ status: "ok", acceptance: ["A", "B"], notYetDone, ...extra });
+  const r = await ok(ev, createContext(plan({ searchedDone: "text ~ \"a\": none", missing: [m("A"), m("B")] })));
+  assert.deepEqual(r.notes, ["Searched for done work, and evidence for 2 acceptance items"]);
+
+  // Only a plan is judged; other statuses pass and say so.
+  const none = await ok(ev, createContext(answer({ status: "none", summary: "DASH-1 is already Done" })));
+  assert.deepEqual(none.notes, ["No plan (none)"]);
+  await ok(ev, createContext(answer({ status: "ask" })), { when: "ok, split" });
+  await bad(ev, createContext(answer({ status: "ask", acceptance: ["A"] })), { when: "" }, /^No notYetDone/);
+
+  await bad(ev, createContext(plan(undefined)), {}, /^No notYetDone: before planning, search for done work like this \(searchedDone\) and, for each acceptance item/);
+  await bad(ev, createContext(plan({ missing: [m("A"), m("B")] })), {}, /^notYetDone\.searchedDone is empty: search for done tickets/);
+  const g = await bad(ev, createContext(plan({ searchedDone: "x", missing: [m("A"), m("B", " ")] })), {}, /^No evidence it is still missing for: B\. For each, name the file and function you read \(read\) and why/);
+  assert.equal(g.failures.length, 1);
+  await bad(ev, createContext(plan({ searchedDone: "x", missing: [m("A", "")] })), {}, /missing for: A; B\./);
+  await bad(ev, createContext(plan({ searchedDone: "x", missing: [m("A"), m("B", "src/b.js", "didn't read it yet")] })), {}, /^notYetDone says some code was not read: read it before planning$/);
+  const both = await bad(ev, createContext(plan({ missing: [m("A")] })), {}, /searchedDone is empty/, /missing for: B\./);
+  assert.equal(both.failures.length, 2, "every problem is listed");
+
+  // Not Dash-specific: other keys, no search needed.
+  const other = answer({ status: "ok", criteria: ["C"], evidence: { missing: [m("C")] } });
+  const o = await ok(ev, createContext(other), { key: "evidence", acceptanceKey: "criteria", requireSearch: false });
+  assert.deepEqual(o.notes, ["Evidence for 1 criteria item"]);
+  await bad(ev, createContext(other), { key: "evidence", acceptanceKey: "criteria" }, /^evidence\.searchedDone is empty/);
+  await bad(ev, createContext({ input: { answer: "no json" } }), {}, /The answer has no handoff/);
+});
+
+test("plan.noOpenDecisions: the plan lists its open decisions, and there are none", async () => {
+  const { noOpenDecisions: nd } = helpers.plan;
+  const r = await ok(nd, createContext(answer({ status: "ok", openDecisions: [] })));
+  assert.deepEqual(r.notes, ["No open decisions"]);
+  await bad(nd, createContext(answer({ status: "ok" })), {}, /^No openDecisions: list every choice the ticket or your plan leaves open .* or \[\] if there are none$/);
+  await bad(nd, createContext(answer({ status: "ok", openDecisions: "none" })), {}, /^No openDecisions/);
+  await bad(nd, createContext(answer({ status: "ok", openDecisions: ["X or Y", "scope"] })), {}, /^The plan leaves decisions open: X or Y; scope\. Don't plan: answer status ask with the question for the user\.$/);
+  const ask = await ok(nd, createContext(answer({ status: "ask", question: "X or Y?" })));
+  assert.deepEqual(ask.notes, ["No plan (ask)"]);
+  await bad(nd, createContext(answer({ status: "ok", choices: ["Z"] })), { key: "choices" }, /decisions open: Z\./);
+  await bad(nd, createContext(answer({ status: "ask" })), { when: [] }, /^No openDecisions/);
 });
 
 test("git helpers, against temp repos", async () => {

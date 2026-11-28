@@ -1,6 +1,6 @@
 {
   "name": "@trops/dash-check",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Compose deterministic checks from small, described building blocks: Jest-style files, JSON recipes and helpers. Runs in Dash, in CI and on a laptop.",
   "license": "MIT",
   "author": "trops",
